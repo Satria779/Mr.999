@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Fornixe</title>
+<style>
+/* ---------- GLOBAL ---------- */
+body{
+  margin:0;padding:0;
+  font-family:Poppins, sans-serif;
+  color:white;
+  background:url('https://files.catbox.moe/2tl98n.jpg') no-repeat center center fixed;
+  background-size:cover;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+.overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);z-index:-1;
+}
+section{ display:none; padding:20px; margin-top:70px; }
+.active{ display:block; }
+
+/* ---------- HEADER ---------- */
+header{
+  position:fixed; top:0; width:100%;
+  padding:10px 15px;
+  background:rgba(0,0,0,0.7);
+  text-align:left;
+  font-size:18px;
+  color:#b57bff;
+  box-shadow:0 2px 10px rgba(0,0,0,0.7);
+  z-index:25;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.header-title{
+  font-size:18px;
+  letter-spacing:1px;
+}
+.header-right{ display:flex; gap:10px; align-items:center; }
+
+/* ---------- SLIDER ---------- */
+.slider{
+  width:100%;
+  height:210px;
+  border-radius:12px;
+  overflow:hidden;
+  position:relative;
+  border:1px solid rgba(255,255,255,0.06);
+  box-shadow:0 8px 30px rgba(0,0,0,0.5);
+}
+.slider img{
+  width:100%;
+  height:100%;
+  position:absolute;
+  object-fit:cover;
+  opacity:0;
+  transition:opacity 1.2s ease;
+}
+.slider img.active{
+  opacity:1;
+}
+
+/* ---------- PROFILE CARD ---------- */
+.profile-card{
+  position:fixed;
+  top:70px; right:16px;
+  width:220px;
+  background:rgba(0,0,0,0.6);
+  border:1px solid rgba(255,255,255,0.06);
+  padding:12px;
+  border-radius:12px;
+  z-index:30;
+  box-shadow:0 8px 30px rgba(0,0,0,0.6);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.profile-card img{
+  width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.06);
+}
+.profile-info{ font-size:13px; color:#e9d9ff; }
+.profile-info b{ display:block; font-size:14px; color:#fff; margin-bottom:4px; }
+.status-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:#39d353;margin-right:6px;vertical-align:middle;
+}
+
+/* ---------- BOX ---------- */
+.box{
+  background:rgba(26,21,37,0.85);
+  padding:15px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,0.06);
+  margin-bottom:20px;
+}
+
+/* BUTTONS */
+.btn{
+  width:100%;
+  padding:15px;
+  background:#000000;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:17px;
+  margin-top:10px;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* inputs */
+input,select{
+  width:100%;
+  padding:14px;
+  border:none;
+  background:rgba(15,11,24,0.8);
+  color:#cbb2ff;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+/* logo bug */
+.logo-bug{
+  width:150px;height:150px;border-radius:50%;display:block;margin:auto;border:4px solid #b57bff;margin-bottom:20px;object-fit:cover;
+}
+
+/* video kecil panjang */
+.small-video{
+  width:90%;
+  height:80px;
+  border-radius:12px;
+  display:block;
+  margin:0 auto 20px auto;
+  object-fit:cover;
+  box-shadow:0 6px 18px rgba(0,0,0,0.6);
+}
+
+/* loading spinner */
+#loading{text-align:center;display:none;margin-top:20px;}
+.spinner{
+  width:50px;height:50px;border:4px solid rgba(140,100,255,0.6);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin:auto;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+/* ---------- NAV BAR ---------- */
+nav{
+  position:fixed; bottom:0; width:100%;
+  padding:10px 0; background:black;
+  display:flex; justify-content:space-around; align-items:center;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.7); z-index:20;
+}
+nav a{ text-align:center; text-decoration:none; color:white; font-size:13px; }
+nav img{ display:block; margin:auto; }
+
+/* MENU GRID */
+.menu-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:15px; }
+.menu-card{
+  background:rgba(24,18,33,0.9); padding:20px; border-radius:15px; text-align:center;
+  color:#e7ccff; font-size:16px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,0.03);
+  box-shadow:0 6px 20px rgba(0,0,0,0.45); transition:transform .18s;
+}
+.menu-card:hover{ transform:translateY(-4px); }
+
+/* popup */
+#popupSuccess{
+  display:none;position:fixed;inset:0;align-items:center;justify-content:center;z-index:60;
+}
+.popup-box{
+  background:black;padding:20px;border-radius:14px;width:300px;text-align:center;border:1px solid #b57bff;
+}
+.popup-title{font-size:20px;margin-bottom:10px;color:#b57bff;}
+.popup-ok{
+  margin-top:10px;background:#b57bff;border:none;padding:10px 20px;border-radius:8px;color:white;font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<div class="overlay"></div>
+
+<header>
+  <div class="header-title">AMBATRON ᴠ3</div>
+  <div class="header-right">
+    <div class="small-muted" style="margin-right:8px;">^⁠_⁠^<b style="color:#fff"></b></div>
+    <div class="small-muted">v3</div>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card" style="width:92%;max-width:420px;background:rgba(10,8,14,0.95);border-radius:14px;padding:20px;border:1px solid rgba(145,75,255,0.08);box-shadow:0 8px 30px rgba(0,0,0,0.6);margin:90px auto;">
+    <h2 style="text-align:center;color:#ffb8ff;margin-bottom:10px;">Login</h2>
+    <small style="display:block;text-align:center;color:#b8a1d9;margin-bottom:15px;">Please enter your password and name</small>
+
+    <div style="width:100%;background:rgba(20,15,30,0.85);border:1px solid rgba(145,75,255,0.08);padding:10px;border-radius:12px;margin-bottom:15px;display:flex;justify-content:center;">
+      <img src="https://files.catbox.moe/w0665z.jpg" style="width:120px;height:120px;border-radius:12px;object-fit:cover;">
+    </div>
+
+    <input id="loginUser" type="text" placeholder="Username">
+    <input id="loginPass" type="password" placeholder="Password">
+    <button class="btn" onclick="doLogin()">Masuk</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loginLoading" style="display:none;align-items:center;justify-content:center;position:fixed;inset:0;z-index:90;">
+  <video id="introVideo" preload="auto" playsinline muted style="width:90%;max-width:640px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6);"></video>
+  <div style="height:18px"></div>
+  <div class="spinner" style="width:40px;height:40px;border-width:3px;border-color:rgba(181,123,255,0.8);border-top-color:transparent;"></div>
+</div>
+
+<!-- PROFILE CARD -->
+<div id="profileCard" class="profile-card" style="display:none;">
+  <img id="profilePhoto" src="https://files.catbox.moe/2tl98n.jpg">
+  <div class="profile-info">
+    <b id="profileName">Username</b>
+    <div class="small-muted"><span class="status-dot"></span><span id="profileStatus">Online</span></div>
+    <div style="margin-top:8px;font-size:12px;color:#cbb2ff;">
+      Role: <span id="profileRole">User</span><br>
+      Expired: 2006<span id="profileExp">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<section id="home">
+
+  <div class="slider">
+    <img src="https://files.catbox.moe/2tl98n.jpg" class="active">
+    <img src="https://files.catbox.moe/wmhohw.jpg">
+    <img src="https://files.catbox.moe/w0665z.jpg">
+  </div>
+
+  <div style="display:flex;gap:15px;margin-top:15px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:240px;">
+      <div class="box">
+        <h3 style="margin:0 0 8px 0;">𝐔𝐏𝐃𝐄𝐓 𝐅𝐔𝐂𝐓𝐈𝐎𝐍 𝐒𝐀𝐁𝐓𝐔 𝐉𝐀𝐌 𝟏𝟓.𝟓𝟒 </h3>
+        <div class="small-muted"> information login user</div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+          <div>
+            <div id="homeName" style="font-size:15px;color:#fff">-</div>
+            <div id="homePhone" class="small-muted">-</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="small-muted">Status</div>
+            <div style="font-weight:700;color:#39d353">Online</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3 style="margin:0 0 8px 0;">Quick Actions</h3>
+
+        <!-- FIXED: SERANG MUSUH MASUK SALURAN -->
+        <button class="btn" onclick="window.open('https://whatsapp.com/channel/0029Vb7CT3fBKfi8SqpKbi1J','_blank')">
+          INFO UPDATE APK SALURAN WHATSAPP 
+        </button>
+
+        <button class="btn" onclick="showPage('tools')">𝐁𝐔𝐊𝐀 𝐓𝐎𝐋𝐒</button>
+      </div>
+    </div>
+
+    <div style="width:320px;min-width:260px;">
+      <div class="box center">
+        <h3 style="margin:0 0 8px 0;">Setatus</h3>
+        <div style="display:flex;justify-content:space-between;gap:10px;">
+          <div style="flex:1;">
+            <div class="small-muted">Connection</div>
+            <div style="font-weight:700">—</div>
+          </div>
+          <div style="flex:1;">
+            <div class="small-muted">Premium</div>
+            <div style="font-weight:700">GARATIS FRE</div>
+          </div>
+          <div style="flex:1;">
+            <div class="small-muted">server sender</div>
+            <div style="font-weight:700">999</div>
+            <div class="box center">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUG -->
+<section id="bug">
+
+  <img id="bugLogo" src="https://files.catbox.moe/2tl98n.jpg" class="logo-bug">
+
+  <video class="small-video" src="https://files.catbox.moe/e9vur2.mp4" autoplay loop muted playsinline></video>
+
+  <div class="box">
+    <label style="font-size:18px;">𝐍𝐎𝐌𝐎𝐑 𝐓𝐀𝐑𝐆𝐄𝐓</label>
+    <input id="target" type="number" placeholder="+62xxxxxxxxxx">
+    <label style="font-size:18px;margin-top:6px;">𝐏𝐈𝐋𝐈𝐇 𝐒𝐄𝐑𝐀𝐍𝐆𝐀𝐍</label>
+    <select id="bugMenu">
+      <option>@whatsapp.net crash</option>
+      <option>@whatsapp.net blank ios</option>
+      <option>@whatsapp.net blank andro</option>
+      <option>@whatsapp.net delayking</option>
+    </select>
+    <button class="btn" onclick="sendBug()">☠︎𝕳𝕺𝕸𝕰</button>
+  </div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p class="center small-muted">Mengirim...</p>
+  </div>
+
+  <audio id="sound" src="https://files.catbox.moe/k9ozu4.mp3"></audio>
+</section>
+
+<!-- TOOLS -->
+<section id="tools">
+  <div class="box">
+    <h2>Download Video TikTok</h2>
+    <input id="tturl" type="text" placeholder="Masukkan URL TikTok">
+    <button class="btn" onclick="downloadTT()">Download</button>
+  </div>
+</section>
+
+<!-- MENU ALL -->
+<section id="menuall">
+  <div class="box center">
+    <h2>MENU ALL</h2>
+    <div class="menu-grid" style="margin-top:12px;">
+      <div class="menu-card" onclick="showPage('bug')">WhatsApp</div>
+      <div class="menu-card" onclick="openGroups()">GROUPS</div>
+      <div class="menu-card" onclick="openJPM()">JPM</div>
+      <div class="menu-card" onclick="openDownload()">DOWNLOAD</div>
+      <div class="menu-card" onclick="openPayment()">PAYMENT</div>
+      <div class="menu-card" onclick="openPremium()">PREMIUM</div>
+      <div class="menu-card" onclick="showPage('tools')">TOOLS</div>
+      <div class="menu-card" onclick="openQuick()">QUICK</div>
+      <div class="menu-card" onclick="openNet()">NETWORK</div>
+      <div class="menu-card" onclick="openUtils()">UTILS</div>
+      <div class="menu-card" onclick="openPair()">PAIR</div>
+    </div>
+  </div>
+</section>
+
+<!-- NAV -->
+<nav>
+  <a onclick="navClick('home')" style="cursor:pointer;">
+    <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" style="width:28px;height:28px;filter:invert(1);">
+    <div>Home</div>
+  </a>
+
+  <a onclick="navClick('bug')" style="cursor:pointer;">
+    <img src="https://files.catbox.moe/2tl98n.jpg" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+    <div>WhatsApp</div>
+  </a>
+
+  <a onclick="navClick('tools')" style="cursor:pointer;">
+    <img src="https://cdn-icons-png.flaticon.com/512/565/565547.png" style="width:28px;height:28px;filter:invert(1);">
+    <div>Tools</div>
+  </a>
+
+  <a onclick="navClick('menuall')" style="cursor:pointer;">
+    <img src="https://cdn-icons-png.flaticon.com/512/992/992651.png" style="width:28px;height:28px;filter:invert(1);">
+    <div>MenuAll</div>
+  </a>
+</nav>
+
+<!-- POPUP -->
+<div id="popupSuccess">
+  <div class="popup-box">
+    <div class="popup-title">@whatsapp.net successfully</div>
+    <div id="popupText" style="font-size:18px;"></div>
+    <button class="popup-ok" onclick="closePopup()">OK</button>
+  </div>
+</div>
+
+<script>
+
+let logged = false;
+
+/* ==== NAV LOCK SEBELUM LOGIN ==== */
+function navClick(page){
+  if(!logged){
+    alert("Login dulu hytam 😂");
+    return;
+  }
+  showPage(page);
+}
+
+function showPage(page){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+}
+
+function sendBug(){
+  let no = document.getElementById("target").value;
+  if(no.length < 10){ alert("Nomor nya masukin hytam"); return; }
+
+  document.getElementById("loading").style.display="block";
+  document.getElementById("sound").play().catch(()=>{});
+
+  setTimeout(()=>{
+    document.getElementById("loading").style.display="none";
+    document.getElementById("popupText").innerText = `Bug sent to ${no}`;
+    document.getElementById("popupSuccess").style.display = "flex";
+  },1500);
+}
+function closePopup(){ document.getElementById("popupSuccess").style.display = "none"; }
+
+function downloadTT(){
+  let url = document.getElementById("tturl").value;
+  if(!url.includes("tiktok")){ alert("URL tidak valid!"); return; }
+  window.open("https://ttsave.app/download?url=" + encodeURIComponent(url));
+}
+
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+
+  if(u === 'USER' && p === '181'){
+    logged = true; // FIX LOGIN LOCK
+    document.getElementById('loginScreen').style.display = 'none';
+
+    const load = document.getElementById('loginLoading');
+
+    setTimeout(()=>{ finishLogin(u); }, 1000);
+  }
+  else alert('Username atau password salah!');
+}
+
+function finishLogin(username){
+  document.getElementById('loginLoading').style.display = 'none';
+
+  showPage('home');
+
+  document.getElementById('profileName').innerText = username;
+  document.getElementById('homeName').innerText = username;
+  document.getElementById('homePhone').innerText = "No: —";
+
+  document.getElementById('profileCard').style.display = 'flex';
+
+  document.querySelector('.header-right .small-muted b').innerText = "User";
+}
+
+const slides = document.querySelectorAll(".slider img");
+let index = 0;
+
+setInterval(()=>{
+  slides[index].classList.remove("active");
+  index = (index + 1) % slides.length;
+  slides[index].classList.add("active");
+}, 3500);
+
+function openGroups(){ alert("Menu Groups siap."); }
+function openJPM(){ alert("Menu JPM tidak ada"); }
+function openDownload(){ alert("Fitur tidak tersedia."); }
+function openPayment(){ alert("DANA: 085817380602"); }
+function openPremium(){ alert("Tidak modal."); }
+function openQuick(){ alert("Quick Access Free."); }
+function openNet(){ let ip = prompt("Masukkan IP:"); if(ip) alert("IP " + ip + " disimpan."); }
+function openUtils(){ let email = prompt("Masukkan email DONE:"); if(email) alert("DONE terkirim: " + email); }
+function openPair(){ alert("Pair WhatsApp via kode."); }
+</script>
+
+</body>
+</html>
