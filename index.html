@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 AI Web Vulnerability Scanner</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            margin: 20px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .scanner-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+        }
+
+        .input-group button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .input-group button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            display: none;
+            padding: 30px;
+        }
+
+        .risk-score {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(#4CAF50 0% var(--score-percent), #f0f0f0 var(--score-percent) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .score-value {
+            position: relative;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .vulnerability-list, .recommendations-list {
+            margin-bottom: 30px;
+        }
+
+        .vulnerability-item, .recommendation-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid;
+        }
+
+        .critical { border-left-color: #dc3545; background: #fff5f5; }
+        .high { border-left-color: #fd7e14; background: #fff4e6; }
+        .medium { border-left-color: #ffc107; background: #fffce6; }
+        .low { border-left-color: #28a745; background: #f0fff4; }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .critical .severity-badge { background: #dc3545; }
+        .high .severity-badge { background: #fd7e14; }
+        .medium .severity-badge { background: #ffc107; }
+        .low .severity-badge { background: #28a745; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .history-section {
+            padding: 20px;
+            background: #f8f9fa;
+            margin: 20px;
+            border-radius: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-shield-alt"></i> AI Web Vulnerability Scanner</h1>
+            <p>Deteksi kerentanan keamanan dengan teknologi AI</p>
+        </header>
+
+        <div class="warning-box">
+            <strong><i class="fas fa-exclamation-triangle"></i> PERINGATAN:</strong> 
+            Tools ini hanya untuk keperluan edukasi dan testing website milik Anda sendiri. 
+            Penggunaan pada website tanpa izin adalah ilegal dan tidak etis.
+        </div>
+
+        <div class="scanner-section">
+            <h2><i class="fas fa-search"></i> Scan Website</h2>
+            <div class="input-group">
+                <input type="url" id="targetUrl" 
+                       placeholder="https://website-anda.com" 
+                       required>
+                <button id="scanBtn" onclick="startScan()">
+                    <i class="fas fa-play"></i> Mulai Scan
+                </button>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="loader"></div>
+                <p>Memindai website... Harap tunggu 10-30 detik</p>
+                <p><small>Sedang menganalisis: <span id="currentTask">Menyiapkan scanner...</span></small></p>
+            </div>
+
+            <div class="history-section">
+                <h3><i class="fas fa-history"></i> Riwayat Scan Terakhir</h3>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <div id="results" class="results-section">
+            <div class="risk-score">
+                <div class="score-circle" id="scoreCircle">
+                    <div class="score-value" id="scoreValue">0</div>
+                </div>
+                <h2>Risk Score</h2>
+                <p id="riskLevel">Sedang dianalisis...</p>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3><i class="fas fa-info-circle"></i> Informasi Website</h3>
+                    <div id="websiteInfo"></div>
+                </div>
+                <div class="info-card">
+                    <h3><i class="fas fa-server"></i> Server Information</h3>
+                    <div id="serverInfo"></div>
+                </div>
+                <div class="info-card">
+                    <h3><i class="fas fa-cogs"></i> Technologies Detected</h3>
+                    <div id="technologies"></div>
+                </div>
+                <div class="info-card">
+                    <h3><i class="fas fa-shield-alt"></i> Security Headers</h3>
+                    <div id="securityHeaders"></div>
+                </div>
+            </div>
+
+            <div class="vulnerability-list">
+                <h2><i class="fas fa-bug"></i> Vulnerabilities Found (<span id="vulnCount">0</span>)</h2>
+                <div id="vulnerabilities"></div>
+            </div>
+
+            <div class="recommendations-list">
+                <h2><i class="fas fa-lightbulb"></i> Recommendations</h2>
+                <div id="recommendations"></div>
+            </div>
+
+            <button class="export-btn" onclick="exportReport()">
+                <i class="fas fa-download"></i> Download PDF Report
+            </button>
+        </div>
+
+        <footer>
+            <p>© 2024 AI Vulnerability Scanner - For Educational Purposes Only</p>
+            <p>Developed for security research and education</p>
+        </footer>
+    </div>
+
+    <script>
+        let scanResults = null;
+
+        function startScan() {
+            const url = document.getElementById('targetUrl').value.trim();
+            if (!url) {
+                alert('Masukkan URL website terlebih dahulu');
+                return;
+            }
+
+            // Validasi URL
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                alert('URL harus dimulai dengan http:// atau https://');
+                return;
+            }
+
+            // Tampilkan loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('scanBtn').disabled = true;
+            document.getElementById('results').style.display = 'none';
+
+            // Update progress
+            const tasks = [
+                'Menyiapkan scanner AI...',
+                'Mengambil data website...',
+                'Menganalisis headers keamanan...',
+                'Memindai kerentanan SQL Injection...',
+                'Memindai kerentanan XSS...',
+                'Memindai data sensitif...',
+                'Mendeteksi teknologi...',
+                'Menghitung risk score...',
+                'Menyusun rekomendasi...'
+            ];
+
+            let currentTask = 0;
+            const taskElement = document.getElementById('currentTask');
+            const interval = setInterval(() => {
+                taskElement.textContent = tasks[currentTask];
+                currentTask = (currentTask + 1) % tasks.length;
+            }, 2000);
+
+            // Kirim request ke server
+            fetch('/api/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: url })
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(interval);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('scanBtn').disabled = false;
+                
+                scanResults = data;
+                displayResults(data);
+                loadHistory();
+            })
+            .catch(error => {
+                clearInterval(interval);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('scanBtn').disabled = false;
+                alert('Error: ' + error.message);
+            });
+        }
+
+        function displayResults(data) {
+            // Tampilkan section results
+            document.getElementById('results').style.display = 'block';
+            
+            // Set risk score
+            const score = data.riskScore;
+            document.getElementById('scoreValue').textContent = score;
+            document.getElementById('scoreCircle').style.setProperty('--score-percent', `${score}%`);
+            
+            // Set risk level
+            let riskLevel = 'Tinggi';
+            if (score >= 80) riskLevel = 'Rendah';
+            else if (score >= 60) riskLevel = 'Sedang';
+            else if (score >= 40) riskLevel = 'Tinggi';
+            else riskLevel = 'Kritis';
+            
+            document.getElementById('riskLevel').textContent = `Level Risiko: ${riskLevel}`;
+            
+            // Set vulnerability count
+            document.getElementById('vulnCount').textContent = data.vulnerabilities.length;
+            
+            // Display website info
+            document.getElementById('websiteInfo').innerHTML = `
+                <div class="info-item">
+                    <span>URL:</span>
+                    <span>${data.url}</span>
+                </div>
+                <div class="info-item">
+                    <span>Waktu Scan:</span>
+                    <span>${new Date(data.timestamp).toLocaleString()}</span>
+                </div>
+            `;
+            
+            // Display server info
+            document.getElementById('serverInfo').innerHTML = `
+                <div class="info-item">
+                    <span>Server:</span>
+                    <span>${data.serverInfo.server}</span>
+                </div>
+                <div class="info-item">
+                    <span>Powered By:</span>
+                    <span>${data.serverInfo.poweredBy}</span>
+                </div>
+                <div class="info-item">
+                    <span>Status Code:</span>
+                    <span>${data.serverInfo.statusCode}</span>
+                </div>
+                <div class="info-item">
+                    <span>SSL/TLS:</span>
+                    <span>${data.serverInfo.hasSSL}</span>
+                </div>
+            `;
+            
+            // Display technologies
+            document.getElementById('technologies').innerHTML = 
+                data.technologies.length > 0 
+                    ? data.technologies.map(tech => `<div class="info-item"><span>${tech}</span></div>`).join('')
+                    : '<p>Tidak terdeteksi</p>';
+            
+            // Display security headers
+            const headersHtml = Object.entries(data.securityHeaders)
+                .map(([key, value]) => `
+                    <div class="info-item">
+                        <span>${key}:</span>
+                        <span style="color: ${value === 'MISSING' ? '#dc3545' : '#28a745'}">
+                            ${value === 'MISSING' ? '❌ Tidak Ada' : '✅ Ada'}
+                        </span>
+                    </div>
+                `).join('');
+            document.getElementById('securityHeaders').innerHTML = headersHtml;
+            
+            // Display vulnerabilities
+            const vulnHtml = data.vulnerabilities.length > 0
+                ? data.vulnerabilities.map(vuln => `
+                    <div class="vulnerability-item ${vuln.severity.toLowerCase()}">
+                        <div class="severity-badge">${vuln.severity}</div>
+                        <h3>${vuln.type}</h3>
+                        <p>${vuln.description}</p>
+                        <p><small>Deteksi: ${vuln.detection} | Lokasi: ${vuln.location}</small></p>
+                        ${vuln.samples ? `<p><small>Contoh: ${vuln.samples.join(', ')}</small></p>` : ''}
+                    </div>
+                `).join('')
+                : '<div class="vulnerability-item low"><p>Tidak ditemukan kerentanan kritis</p></div>';
+            document.getElementById('vulnerabilities').innerHTML = vulnHtml;
+            
+            // Display recommendations
+            const recHtml = data.recommendations.length > 0
+                ? data.recommendations.map(rec => `
+                    <div class="recommendation-item ${rec.priority.toLowerCase()}">
+                        <h3>${rec.title} (${rec.priority})</h3>
+                        <p>${rec.description}</p>
+                        <p><strong>Perbaikan:</strong> ${rec.fix}</p>
+                    </div>
+                `).join('')
+                : '<div class="recommendation-item low"><p>Tidak ada rekomendasi perbaikan</p></div>';
+            document.getElementById('recommendations').innerHTML = recHtml;
+            
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function loadHistory() {
+            fetch('/api/history')
+                .then(response => response.json())
+                .then(data => {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.map(item => `
+                        <div class="history-item">
+                            <span>${new Date(item.timestamp).toLocaleTimeString()}</span>
+                            <span>${item.url.substring(0, 30)}...</span>
+                            <span>Score: ${item.riskScore}</span>
+                            <span>Vuln: ${item.vulnerabilityCount}</span>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function exportReport() {
+            if (!scanResults) {
+                alert('Tidak ada hasil scan untuk diexport');
+                return;
+            }
+            
+            // Simple HTML export (bisa diganti dengan PDF generation)
+            const report = `
+                <html>
+                <head><title>Security Report - ${scanResults.url}</title></head>
+                <body>
+                    <h1>Security Scan Report</h1>
+                    <p>URL: ${scanResults.url}</p>
+                    <p>Scan Time: ${new Date(scanResults.timestamp).toLocaleString()}</p>
+                    <p>Risk Score: ${scanResults.riskScore}</p>
+                    <h2>Vulnerabilities Found: ${scanResults.vulnerabilities.length}</h2>
+                    ${scanResults.vulnerabilities.map(v => `
+                        <h3>${v.type} (${v.severity})</h3>
+                        <p>${v.description}</p>
+                    `).join('')}
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob([report], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `security-report-${Date.now()}.html`;
+            a.click();
+        }
+
+        // Load history on page load
+        window.onload = loadHistory;
+
+        // Enter key support
+        document.getElementById('targetUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startScan();
+            }
+        });
+    </script>
+</body>
+</html>
