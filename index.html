@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatApp - Tanpa Nomor Telepon</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 1100px;
+      height: 85vh;
+      display: flex;
+      overflow: hidden;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: #f0f2f5;
+      border-right: 1px solid #e0e0e0;
+      display: flex;
+      flex-direction: column;
+    }
+    .user-info {
+      padding: 20px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .user-info h3 {
+      color: #075e54;
+      font-size: 1.2rem;
+    }
+    .user-info p {
+      color: #666;
+      font-size: 0.8rem;
+    }
+    .logout-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      width: 100%;
+    }
+    .users-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 4px;
+    }
+    .user-item:hover {
+      background: #e9ecef;
+    }
+    .user-item.active {
+      background: #e0e0e0;
+    }
+    .avatar {
+      width: 45px;
+      height: 45px;
+      background: #075e54;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      margin-right: 12px;
+    }
+    .user-detail {
+      flex: 1;
+    }
+    .username {
+      font-weight: 600;
+    }
+    .online-status {
+      font-size: 0.7rem;
+      color: #25d366;
+    }
+    /* Chat area */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #efeae2;
+    }
+    .chat-header {
+      padding: 15px 20px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+    }
+    .chat-header .avatar {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+      margin-right: 15px;
+    }
+    .chat-header h4 {
+      font-size: 1rem;
+    }
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .message {
+      max-width: 70%;
+      padding: 8px 12px;
+      border-radius: 18px;
+      font-size: 0.9rem;
+      position: relative;
+      word-wrap: break-word;
+    }
+    .message.sent {
+      background: #dcf8c5;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .message.received {
+      background: white;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .message small {
+      font-size: 0.65rem;
+      color: #888;
+      display: block;
+      text-align: right;
+      margin-top: 4px;
+    }
+    .input-area {
+      background: white;
+      padding: 12px 20px;
+      display: flex;
+      gap: 12px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: #f0f2f5;
+      border-radius: 24px;
+      outline: none;
+      font-size: 0.9rem;
+    }
+    .input-area button {
+      background: #075e54;
+      color: white;
+      border: none;
+      padding: 0 24px;
+      border-radius: 24px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    /* Login/Register form */
+    .auth-container {
+      background: white;
+      border-radius: 28px;
+      padding: 40px;
+      width: 400px;
+      text-align: center;
+    }
+    .auth-container h2 {
+      margin-bottom: 20px;
+      color: #075e54;
+    }
+    .auth-container input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 24px;
+      outline: none;
+    }
+    .auth-container button {
+      width: 100%;
+      padding: 12px;
+      background: #075e54;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .toggle-auth {
+      margin-top: 15px;
+      color: #075e54;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .error {
+      color: red;
+      margin: 8px 0;
+      font-size: 0.8rem;
+    }
+    .empty-chat {
+      text-align: center;
+      color: #888;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  // State
+  let token = localStorage.getItem('chat_token');
+  let currentUser = null;
+  let socket = null;
+  let activeChatUser = null; // { id, username }
+  let messagesCache = new Map(); // userId -> array pesan
+  let onlineUsersSet = new Set();
+
+  const appDiv = document.getElementById('app');
+
+  function render() {
+    if (!token || !currentUser) {
+      renderAuth();
+    } else {
+      renderChat();
+    }
+  }
+
+  function renderAuth() {
+    appDiv.innerHTML = `
+      <div class="auth-container" id="authContainer">
+        <h2>ChatApp 📱</h2>
+        <div id="authForm">
+          <input type="text" id="username" placeholder="Username" autocomplete="off">
+          <input type="password" id="password" placeholder="Password">
+          <button id="loginBtn">Masuk</button>
+          <div class="toggle-auth" id="toRegister">Belum punya akun? Daftar</div>
+          <div id="errorMsg" class="error"></div>
+        </div>
+      </div>
+    `;
+
+    const loginBtn = document.getElementById('loginBtn');
+    const toRegister = document.getElementById('toRegister');
+    const errorDiv = document.getElementById('errorMsg');
+
+    let isLogin = true;
+
+    function switchForm() {
+      isLogin = !isLogin;
+      const formHtml = isLogin ? `
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button id="loginBtn">Masuk</button>
+        <div class="toggle-auth" id="toRegister">Belum punya akun? Daftar</div>
+      ` : `
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button id="registerBtn">Daftar</button>
+        <div class="toggle-auth" id="toLogin">Sudah punya akun? Masuk</div>
+      `;
+      document.getElementById('authForm').innerHTML = formHtml;
+      if (isLogin) {
+        document.getElementById('loginBtn').addEventListener('click', handleLogin);
+        document.getElementById('toRegister').addEventListener('click', switchForm);
+      } else {
+        document.getElementById('registerBtn').addEventListener('click', handleRegister);
+        document.getElementById('toLogin').addEventListener('click', switchForm);
+      }
+      errorDiv.innerText = '';
+    }
+
+    async function handleLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) {
+        errorDiv.innerText = 'Isi semua field';
+        return;
+      }
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        token = data.token;
+        currentUser = { id: data.userId, username: data.username };
+        localStorage.setItem('chat_token', token);
+        initSocket();
+        render();
+      } catch (err) {
+        errorDiv.innerText = err.message;
+      }
+    }
+
+    async function handleRegister() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) {
+        errorDiv.innerText = 'Isi semua field';
+        return;
+      }
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        alert('Pendaftaran berhasil! Silakan login.');
+        isLogin = true;
+        switchForm();
+      } catch (err) {
+        errorDiv.innerText = err.message;
+      }
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    toRegister.addEventListener('click', switchForm);
+  }
+
+  function initSocket() {
+    if (socket) socket.disconnect();
+    socket = io({
+      auth: { token }
+    });
+
+    socket.on('connect', () => {
+      console.log('Socket terhubung');
+    });
+
+    socket.on('new_message', (msg) => {
+      // Pesan masuk
+      const otherId = msg.fromUserId;
+      if (!messagesCache.has(otherId)) messagesCache.set(otherId, []);
+      messagesCache.get(otherId).push({
+        id: msg.id,
+        fromUserId: msg.fromUserId,
+        toUserId: currentUser.id,
+        message: msg.message,
+        timestamp: msg.timestamp,
+        isOwn: false
+      });
+      // Jika sedang chat dengan pengirim, refresh
+      if (activeChatUser && activeChatUser.id === otherId) {
+        renderMessages();
+      } else {
+        // Update badge atau notifikasi sederhana (optional)
+      }
+    });
+
+    socket.on('message_sent', (msg) => {
+      // Pesan terkirim, update cache
+      const otherId = msg.toUserId;
+      if (!messagesCache.has(otherId)) messagesCache.set(otherId, []);
+      messagesCache.get(otherId).push({
+        id: msg.id,
+        fromUserId: currentUser.id,
+        toUserId: otherId,
+        message: msg.message,
+        timestamp: msg.timestamp,
+        isOwn: true
+      });
+      if (activeChatUser && activeChatUser.id === otherId) {
+        renderMessages();
+      }
+    });
+
+    socket.on('online_users', (userIds) => {
+      onlineUsersSet.clear();
+      userIds.forEach(id => onlineUsersSet.add(id));
+      renderUserList();
+    });
+  }
+
+  async function fetchUsers() {
+    const res = await fetch('/users', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Gagal ambil daftar user');
+    return await res.json();
+  }
+
+  async function fetchMessages(otherUserId) {
+    const res = await fetch(`/messages/${otherUserId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Gagal ambil pesan');
+    const data = await res.json();
+    const formatted = data.map(m => ({
+      ...m,
+      isOwn: m.fromUserId === currentUser.id
+    }));
+    messagesCache.set(otherUserId, formatted);
+    return formatted;
+  }
+
+  async function renderChat() {
+    // Tampilkan layout utama
+    appDiv.innerHTML = `
+      <div class="container">
+        <div class="sidebar">
+          <div class="user-info">
+            <h3>${escapeHtml(currentUser.username)}</h3>
+            <p>Online · Chat tanpa nomor</p>
+            <button class="logout-btn" id="logoutBtn">Keluar</button>
+          </div>
+          <div class="users-list" id="usersList"></div>
+        </div>
+        <div class="chat-area" id="chatArea">
+          <div class="empty-chat">Pilih pengguna untuk mulai chat</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('chat_token');
+      token = null;
+      currentUser = null;
+      if (socket) socket.disconnect();
+      render();
+    });
+
+    // Load daftar user
+    try {
+      const users = await fetchUsers();
+      renderUserList(users);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderUserList(users = null) {
+    const container = document.getElementById('usersList');
+    if (!container) return;
+    if (!users) {
+      fetchUsers().then(u => renderUserList(u)).catch(console.error);
+      return;
+    }
+    if (users.length === 0) {
+      container.innerHTML = '<div style="padding: 20px; text-align:center;">Belum ada pengguna lain</div>';
+      return;
+    }
+    container.innerHTML = users.map(user => `
+      <div class="user-item ${activeChatUser?.id === user.id ? 'active' : ''}" data-id="${user.id}" data-name="${escapeHtml(user.username)}">
+        <div class="avatar">${user.username.charAt(0).toUpperCase()}</div>
+        <div class="user-detail">
+          <div class="username">${escapeHtml(user.username)}</div>
+          <div class="online-status">${onlineUsersSet.has(user.id) ? '🟢 Online' : '⚫ Offline'}</div>
+        </div>
+      </div>
+    `).join('');
+    // Event listener
+    document.querySelectorAll('.user-item').forEach(el => {
+      el.addEventListener('click', async () => {
+        const userId = el.dataset.id;
+        const username = el.dataset.name;
+        activeChatUser = { id: userId, username };
+        await openChat(userId, username);
+        renderUserList(); // refresh active highlight
+      });
+    });
+  }
+
+  async function openChat(userId, username) {
+    const chatArea = document.getElementById('chatArea');
+    // Load messages
+    let messages = messagesCache.get(userId);
+    if (!messages) {
+      messages = await fetchMessages(userId);
+    }
+    chatArea.innerHTML = `
+      <div class="chat-header">
+        <div class="avatar">${username.charAt(0).toUpperCase()}</div>
+        <h4>${escapeHtml(username)}</h4>
+      </div>
+      <div class="messages-container" id="messagesContainer"></div>
+      <div class="input-area">
+        <input type="text" id="messageInput" placeholder="Ketik pesan...">
+        <button id="sendBtn">Kirim</button>
+      </div>
+    `;
+    renderMessages();
+    const input = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const sendMessage = () => {
+      const text = input.value.trim();
+      if (!text) return;
+      socket.emit('send_message', { toUserId: userId, message: text });
+      input.value = '';
+    };
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  }
+
+  function renderMessages() {
+    const container = document.getElementById('messagesContainer');
+    if (!container || !activeChatUser) return;
+    const messages = messagesCache.get(activeChatUser.id) || [];
+    if (messages.length === 0) {
+      container.innerHTML = '<div class="empty-chat">Belum ada pesan, mulai percakapan!</div>';
+      return;
+    }
+    container.innerHTML = messages.map(msg => `
+      <div class="message ${msg.isOwn ? 'sent' : 'received'}">
+        ${escapeHtml(msg.message)}
+        <small>${new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
+      </div>
+    `).join('');
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // Initialize
+  if (token) {
+    // Verify token with /users call
+    fetch('/users', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => {
+        if (res.ok) {
+          // Decode token simpel (client side decode)
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          currentUser = { id: payload.id, username: payload.username };
+          initSocket();
+          render();
+        } else {
+          localStorage.removeItem('chat_token');
+          token = null;
+          render();
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('chat_token');
+        token = null;
+        render();
+      });
+  } else {
+    render();
+  }
+</script>
+</body>
+</html>
